@@ -1,12 +1,13 @@
-import express from 'express';
+import express, { Application } from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors'
 
-const app = express();
-const port = 3000;
+class App {
+  public express: Application;
+  public port: number;
 
-app.get('/', (req, res) => {
-  res.send('Hello, TypeScript with Express!');
-});
-
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
-});
+  constructor(controllers: Controller[], port: number) {
+    this.express = express();
+    this.port = port;
+  }
+}
