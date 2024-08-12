@@ -1,13 +1,13 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import HttpException from '@/utils/exceptions/http.exception';
 
-const errorMiddleware = (error: HttpException, req: Request, res: Response, next: NextFunction): void => {
+const errorMiddleware = (error: HttpException, req: Request, res: Response): void => {
   const status = error.status || 500;
-  const message = error.message || 'Something went wrong...';
+  const message = error.message || 'Unknown error occurred';
 
   res.status(status).send({
-    status,
-    message
+    status: 'error',
+    message: message
   });
 };
 
