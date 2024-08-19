@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
 import HttpException from '@/utils/exceptions/http.exception';
 
-const errorMiddleware = (error: HttpException, req: Request, res: Response): void => {
-  const status = error.status || 500;
+const errorMiddleware = (error: Error, req: Request, res: Response): void => {
   const message = error.message || 'Unknown error occurred';
+  const statusCode = error instanceof HttpException ? error.status : 500;
 
-  res.status(status).send({
+  res.status(statusCode).send({
     status: 'error',
     message: message
   });

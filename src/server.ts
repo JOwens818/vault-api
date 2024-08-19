@@ -1,5 +1,5 @@
 import express, { Application } from 'express';
-import mongoose from 'mongoose';
+import mongoose, { Error } from 'mongoose';
 import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
@@ -40,10 +40,17 @@ class App {
     this.express.use(ErrorMiddleware);
   }
 
-  private initializeDatabaseConnection(): void {
+  private async initializeDatabaseConnection(): Promise<void> {
     const { MONGODB_USERNAME, MONGODB_PASSWORD, MONGODB_DATABASE, MONGODB_HOST, MONGODB_PORT } = process.env;
     const path = `${MONGODB_USERNAME}:${MONGODB_PASSWORD}@${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DATABASE}`;
-    mongoose.connect(`mongodb://${path}?authSource=admin`);
+    try {
+      await mongoose.connect(`mongodb://${path}?authSource=admin`);
+      console.log(`Connected to mongodb at ${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DATABASE}`);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.log(`Error connecting to mongodb: ${error.message}`);
+      }
+    }
   }
 
   public listen(): void {

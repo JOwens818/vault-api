@@ -12,12 +12,14 @@ const validationMiddleware = (schema: Joi.Schema): RequestHandler => {
       const value = await schema.validateAsync(req.body, validationOptions);
       req.body = value;
       next();
-    } catch (e: any) {
+    } catch (e) {
       const errors: string[] = [];
-      e.details.array.forEach((error: Joi.ValidationErrorItem) => {
-        errors.push(error.message);
-      });
-      res.status(400).send({ status: 'error', errors: errors });
+      if (e instanceof Joi.ValidationError) {
+        e.details.forEach((error: Joi.ValidationErrorItem) => {
+          errors.push(error.message);
+        });
+      }
+      res.status(400).send({ status: 'error', error: errors });
     }
   };
 };
