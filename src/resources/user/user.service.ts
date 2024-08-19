@@ -16,14 +16,31 @@ class UserService {
   /**
    * Create new user
    */
-  public async create(username: string, password: string, email: string): Promise<User> {
+  public create = async (username: string, password: string, email: string): Promise<User> => {
     const userExists = await this.checkIfUserExists(username);
     if (userExists) {
       throw new HttpException(400, 'Username already exists');
     }
     const newUser = await this.user.create({ username, password, email });
     return newUser;
-  }
+  };
+
+  /**
+   * Get all users
+   */
+  public find = async (): Promise<User[]> => {
+    const users = await this.user.find();
+    return users;
+  };
+
+  public delete = async (username: string): Promise<string> => {
+    const deletedUser = await this.user.findOne({ username });
+    if (deletedUser == null || deletedUser == undefined) {
+      throw new HttpException(400, 'Username does not exist');
+    }
+    this.user.findByIdAndDelete(deletedUser.id);
+    return 'User has been deleted';
+  };
 }
 
 export default UserService;
