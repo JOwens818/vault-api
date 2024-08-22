@@ -6,7 +6,6 @@ class UserService {
   private user = UserModel;
 
   /**
-   *
    * @param username: string
    * @returns True if user exists in users collection; False if not
    */
@@ -16,7 +15,6 @@ class UserService {
   };
 
   /**
-   *
    * @param username: string
    * @param password: string
    * @param email: string
@@ -32,7 +30,6 @@ class UserService {
   };
 
   /**
-   *
    * @returns List of users in users collection
    */
   public find = async (): Promise<User[]> => {
@@ -41,7 +38,6 @@ class UserService {
   };
 
   /**
-   *
    * @param username: string
    * @returns User object requested by username
    */
@@ -54,7 +50,6 @@ class UserService {
   };
 
   /**
-   *
    * @param username: string
    * @returns Successful deletion notification; else HTTPException
    */
