@@ -9,14 +9,15 @@ export default [
     ignores: ['/*', '!/src'],
     rules: {
       semi: 'error',
-    },
+      '@typescript-eslint/no-unused-vars': ['error', { args: 'all', caughtErrors: 'all', argsIgnorePattern: '^_' }]
+    }
   },
   {
     languageOptions: {
-      globals: globals.browser,
-    },
+      globals: globals.browser
+    }
   },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
-  eslintPluginPrettier,
+  eslintPluginPrettier
 ];
