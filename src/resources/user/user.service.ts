@@ -1,9 +1,45 @@
 import UserModel from '@/resources/user/user.model';
 import User from '@/resources/user/user.interface';
 import HttpException from '@/utils/exceptions/http.exception';
+import token from '@/utils/token';
 
 class UserService {
   private user = UserModel;
+
+  public register = async (username: string, password: string, email: string): Promise<string | Error> => {
+    let accessToken!: string;
+    try {
+      const newUser = await this.user.create({ username, password, email });
+      accessToken = token.createToken(newUser);
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new HttpException(400, `Unable to create user: ${error.message}`);
+      }
+    }
+    return accessToken;
+  };
+
+  public login = async (username: string, password: string): Promise<string | Error> => {
+    let accessToken!: string;
+    try {
+      const foundUser = await this.user.findOne({ username: username });
+      if (!foundUser) {
+        throw new Error('Username does not exist');
+      }
+
+      const isValidPassword = await foundUser.isValidPassword(password);
+      if (isValidPassword) {
+        accessToken = token.createToken(foundUser);
+      } else {
+        throw new Error('Incorrect password given');
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new HttpException(400, `Unable to login: ${error.message}`);
+      }
+    }
+    return accessToken;
+  };
 
   /**
    * @param username: string

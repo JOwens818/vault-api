@@ -5,4 +5,6 @@ export default interface User extends Document {
   password: string;
   email: string;
   forgotPw: boolean;
+
+  isValidPassword(password: string): Promise<Error | boolean>;
 }
