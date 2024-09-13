@@ -10,7 +10,7 @@ const validateEnv = (): void => {
     MONGODB_DATABASE: str(),
     MONGODB_HOST: str(),
     MONGODB_PORT: str(),
-    PORT: port({ default: 3000 }),
+    PORT: port({ default: 3030 }),
     JWT_PUBLIC: str(),
     JWT_PRIVATE: str()
   });

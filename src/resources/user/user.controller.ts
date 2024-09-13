@@ -4,6 +4,7 @@ import validationMiddleware from '@/middleware/validation.middleware';
 import validate from '@/resources/user/user.validation';
 import UserService from '@/resources/user/user.service';
 import authenticated from '@/middleware/authenticated.middleware';
+import { UserResponseData } from '@/utils/interfaces/api-response.interface';
 
 class UserController implements Controller {
   private UserService = new UserService();
@@ -23,8 +24,8 @@ class UserController implements Controller {
   private register = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const { username, password, email } = req.body;
-      const token = await this.UserService.register(username, password, email);
-      res.status(201).json({ status: 'success', data: token });
+      const userRespData = await this.UserService.register(username, password, email);
+      res.status(201).json({ status: 'success', data: userRespData });
     } catch (error) {
       next(error);
     }
@@ -33,15 +34,16 @@ class UserController implements Controller {
   private login = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const { username, password } = req.body;
-      const token = await this.UserService.login(username, password);
-      res.status(200).json({ status: 'success', data: token });
+      const userRespData = await this.UserService.login(username, password);
+      res.status(200).json({ status: 'success', data: userRespData });
     } catch (error) {
       next(error);
     }
   };
 
   private getUser = (req: Request, res: Response, _next: NextFunction): Response | void => {
-    res.status(200).json({ status: 'success', data: req.user });
+    const userRespData: UserResponseData = { username: req.user.username, email: req.user.email };
+    res.status(200).json({ status: 'success', data: userRespData });
   };
 }
 
