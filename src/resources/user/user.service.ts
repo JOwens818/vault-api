@@ -15,7 +15,7 @@ class UserService {
       return this.createUserRespData(accessToken, newUser);
     } catch (error) {
       if (error instanceof Error) {
-        throw new HttpException(400, `Unable to create user: ${error.message}`);
+        throw new HttpException(400, error.message);
       }
     }
   };
@@ -25,19 +25,19 @@ class UserService {
       let accessToken!: string;
       const foundUser = await this.user.findOne({ username: username });
       if (!foundUser) {
-        throw new Error('Username does not exist');
+        throw new Error('Invalid username or password');
       }
 
       const isValidPassword = await foundUser.isValidPassword(password);
       if (isValidPassword) {
         accessToken = token.createToken(foundUser);
       } else {
-        throw new Error('Incorrect password given');
+        throw new Error('Invalid username or password');
       }
       return this.createUserRespData(accessToken, foundUser);
     } catch (error) {
       if (error instanceof Error) {
-        throw new HttpException(400, `Unable to login: ${error.message}`);
+        throw new HttpException(400, error.message);
       }
     }
   };

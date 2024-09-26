@@ -13,13 +13,13 @@ const validationMiddleware = (schema: Joi.Schema): RequestHandler => {
       req.body = value;
       next();
     } catch (e) {
-      const errors: string[] = [];
+      let errors: string = '';
       if (e instanceof Joi.ValidationError) {
         e.details.forEach((error: Joi.ValidationErrorItem) => {
-          errors.push(error.message);
+          errors = errors + error.message + '\n';
         });
       }
-      res.status(400).send({ status: 'error', error: errors });
+      res.status(400).send({ status: 'error', message: errors });
     }
   };
 };
