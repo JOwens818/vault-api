@@ -15,7 +15,11 @@ class UserService {
       return this.createUserRespData(accessToken, newUser);
     } catch (error) {
       if (error instanceof Error) {
-        throw new HttpException(400, error.message);
+        if (error.message.includes('duplicate key')) {
+          throw new HttpException(400, 'Username already exists');
+        } else {
+          throw new HttpException(400, error.message);
+        }
       }
     }
   };

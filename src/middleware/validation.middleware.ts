@@ -16,8 +16,9 @@ const validationMiddleware = (schema: Joi.Schema): RequestHandler => {
       let errors: string = '';
       if (e instanceof Joi.ValidationError) {
         e.details.forEach((error: Joi.ValidationErrorItem) => {
-          errors = errors + error.message + '\n';
+          errors = errors + error.message + '|';
         });
+        errors = errors.slice(0, -1);
       }
       res.status(400).send({ status: 'error', message: errors });
     }
