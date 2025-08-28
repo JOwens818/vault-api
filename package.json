@@ -6,8 +6,7 @@
     "start": "node ./dist/src/index.js",
     "build": "tsc --project tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint src/**/*.ts --fix",
-    "postinstall": "npm run build"
+    "lint": "eslint src/**/*.ts --fix"
   },
   "author": "Jim Owens",
   "license": "ISC",

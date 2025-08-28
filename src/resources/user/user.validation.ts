@@ -9,7 +9,7 @@ const create = Joi.object({
 const register = Joi.object({
   username: Joi.string().max(30).required(),
   email: Joi.string().email().required(),
-  password: Joi.string().min(6).required()
+  password: Joi.string().min(6).max(60).required()
 });
 
 const login = Joi.object({
