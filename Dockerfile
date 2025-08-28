@@ -10,6 +10,7 @@ RUN npm ci
 # Copy source code and build
 COPY . .
 RUN npm run build
+RUN npm prune --production
 
 # Stage 2: Create the final, smaller production image
 FROM node:20-alpine AS production
