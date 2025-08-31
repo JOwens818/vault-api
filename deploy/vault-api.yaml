@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vault-api
+  namespace: vault
+spec:
+  selector:
+    matchLabels:
+      app: vault-api
+  template:
+    metadata:
+      labels:
+        app: vault-api
+    spec:
+      containers:
+      - name: vault-api
+        image: docker-registry-service.registry.svc.cluster.local:5000/vault-api:latest
+        envFrom:
+          - secretRef:
+              name: vault-api-secrets
+        ports:
+        - containerPort: 3030
