@@ -1,5 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-wrapper-object-types
-interface Token extends Object {
+interface Token {
   un: string;
   expiresIn: number;
 }

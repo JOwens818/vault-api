@@ -27,8 +27,4 @@ const decrypt = (encryptedText: string): string => {
   return decipher.update(encryptedSecretUtf, 'hex', 'utf8') + decipher.final('utf8');
 };
 
-// encryptSecretValues
-
-// decryptSecretValues
-
-export default { generateHash };
+export default { generateHash, encryptPlainText, decrypt };
