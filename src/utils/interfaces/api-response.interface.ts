@@ -1,6 +1,7 @@
 export interface UserResponseData {
   token?: string;
   username: string;
+  id: string;
   email: string;
 }
 

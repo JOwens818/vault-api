@@ -7,7 +7,7 @@ const jwtExpireTime = 30 * 60;
 
 export const createToken = (user: User): string => {
   const privateKey = process.env.JWT_PRIVATE!.replace(/\\n/gm, '\n') as jwt.Secret;
-  const payload = { un: user.username };
+  const payload = { un: user.username, id: user.id };
   return jwt.sign(payload, privateKey, {
     algorithm: 'ES256',
     expiresIn: jwtExpireTime

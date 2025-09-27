@@ -12,7 +12,7 @@ const authenticated = async (req: Request, _res: Response, next: NextFunction): 
 
     const accessToken = bearer.split('Bearer ')[1].trim();
     const payload = await verifyToken(accessToken);
-    const user = await UserModel.findOne({ username: payload.un }).select('-password').exec();
+    const user = await UserModel.findOne({ _id: payload.id }).select('-password').exec();
     if (!user) {
       throw new HttpException(401, 'Username does not exist');
     }

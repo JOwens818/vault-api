@@ -1,7 +1,28 @@
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
-export default interface Secret extends Document {
+type DecryptedField<T extends 'data' | 'label' | 'notes'> = {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
+} & { [K in T]: string | null };
+
+export interface Secret extends Document {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
+  data: string;
   label: string;
-  secret: string;
-  notes: string;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+
+  decryptAll(): {
+    _id: Types.ObjectId;
+    userId: Types.ObjectId;
+    data: string | null;
+    label: string | null;
+    notes: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+
+  decryptField<T extends 'data' | 'label' | 'notes'>(fieldName: T): DecryptedField<T>;
 }

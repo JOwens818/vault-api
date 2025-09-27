@@ -42,7 +42,7 @@ class UserController implements Controller {
   };
 
   private getUser = (req: Request, res: Response, _next: NextFunction): Response | void => {
-    const userRespData: UserResponseData = { username: req.user.username, email: req.user.email };
+    const userRespData: UserResponseData = { username: req.user.username, id: req.user.id, email: req.user.email };
     this.generateUserResponse(res, 200, userRespData);
   };
 

@@ -2,7 +2,7 @@ import UserModel from '@/resources/user/user.model';
 import HttpException from '@/utils/exceptions/http.exception';
 import token from '@/utils/token';
 import { UserResponseData } from '@/utils/interfaces/api-response.interface';
-import User from './user.interface';
+import User from '@/resources/user/user.interface';
 
 class UserService {
   private user = UserModel;
@@ -47,6 +47,7 @@ class UserService {
     const userRespData = {
       token: token,
       username: user.username,
+      id: user.id,
       email: user.email
     };
     return userRespData;
