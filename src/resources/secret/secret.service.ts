@@ -25,9 +25,7 @@ class SecretService {
       const newSecret = new this.secret({ userId, data, label, notes });
       await newSecret.save();
     } catch (err) {
-      const error = err as unknown;
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      throw new HttpException(400, message);
+      return this.handleError(err);
     }
   };
 
