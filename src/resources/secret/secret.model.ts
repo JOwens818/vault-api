@@ -1,12 +1,18 @@
 import mongoose, { Schema, Model, Types } from 'mongoose';
 import { Secret } from './secret.interface';
-import { encryptPlainText, decryptToPlainText } from '../../utils/crypto';
+import { encryptPlainText, decryptToPlainText } from '@/utils/crypto';
 
 // Utility type for decryptField return
 type DecryptedField<T extends 'data' | 'label' | 'notes'> = {
   _id: Types.ObjectId;
   userId: Types.ObjectId;
 } & { [K in T]: string | null };
+
+export type DecryptedLabel = {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
+  label: string;
+};
 
 interface SecretModel extends Model<Secret> {
   findWithDecryptedLabel(
@@ -78,11 +84,13 @@ secretSchema.statics.findWithDecryptedLabel = async function (id: mongoose.Types
 // Static method: fetch all labels for a user
 secretSchema.statics.findAllLabelsForUser = async function (userId: mongoose.Types.ObjectId) {
   const docs = await this.find({ userId }).select('_id label userId');
-  return docs.map((doc: Secret) => ({
+  const decrypted: DecryptedLabel[] = docs.map((doc: Secret) => ({
     _id: doc._id,
     userId: doc.userId,
     label: decryptToPlainText(doc.label)
   }));
+
+  return decrypted.sort((a: DecryptedLabel, b: DecryptedLabel) => a.label.localeCompare(b.label));
 };
 
 export const SecretModel = mongoose.model<Secret, SecretModel>('Secret', secretSchema);

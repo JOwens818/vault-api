@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 
 const ALGO = 'aes-256-gcm';
-const KEY = crypto.scryptSync(process.env.ENCRYPTION_SECRET!, 'static-salt', 32);
+const KEY = crypto.scryptSync(process.env.ENCRYPTION_KEY!, 'static-salt', 32);
 
 const generateHash = (plainText: string): string => {
   return crypto.createHash('sha256').update(plainText).digest('hex');
