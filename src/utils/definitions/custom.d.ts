@@ -1,9 +1,9 @@
-import User from '@/resources/user/user.interface';
+import Token from '../interfaces/token.interface';
 
 declare global {
   namespace Express {
     export interface Request {
-      user: User;
+      user: Token;
     }
   }
 }

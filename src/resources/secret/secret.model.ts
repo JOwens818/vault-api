@@ -47,6 +47,16 @@ secretSchema.pre('save', function (next) {
   next();
 });
 
+// Encrypt several secrets at once
+secretSchema.pre('insertMany', function (next, docs: Secret[]) {
+  for (const doc of docs) {
+    if (doc.data) doc.data = encryptPlainText(doc.data);
+    if (doc.label) doc.label = encryptPlainText(doc.label);
+    if (doc.notes) doc.notes = encryptPlainText(doc.notes);
+  }
+  next();
+});
+
 // Instance method: decrypt all fields
 secretSchema.methods.decryptAll = function () {
   return {

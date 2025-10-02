@@ -17,7 +17,7 @@ const authenticated = async (req: Request, _res: Response, next: NextFunction): 
       throw new HttpException(401, 'Username does not exist');
     }
 
-    req.user = user;
+    req.user = payload;
     return next();
   } catch (error) {
     next(error);
