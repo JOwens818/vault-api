@@ -1,4 +1,4 @@
-import Token from '../interfaces/token.interface';
+import Token from '@/utils/interfaces/token.interface';
 
 declare global {
   namespace Express {
