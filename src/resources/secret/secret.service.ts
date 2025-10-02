@@ -16,6 +16,12 @@ interface UpdateSecretDTO {
   notes?: string;
 }
 
+export interface ImportRow {
+  data: string;
+  label: string;
+  notes?: string;
+}
+
 class SecretService {
   private secret = SecretModel;
 
@@ -70,6 +76,49 @@ class SecretService {
       if (result.deletedCount !== 1) {
         throw new HttpException(404, 'Secret not found');
       }
+    } catch (err) {
+      return this.handleError(err);
+    }
+  };
+
+  public importSecrets = async (userId: Types.ObjectId, rows: ImportRow[]): Promise<number> => {
+    try {
+      const docs = rows
+        .filter((row) => row.label && row.data)
+        .map((row) => ({
+          userId,
+          data: String(row.data),
+          label: String(row.label),
+          notes: row.notes ? String(row.notes) : undefined
+        }));
+
+      if (docs.length === 0) {
+        throw new HttpException(400, 'No secrets found in import file');
+      }
+
+      const imported = await this.secret.insertMany(docs, { ordered: false });
+      return imported.length;
+    } catch (err) {
+      return this.handleError(err);
+    }
+  };
+
+  public exportSecrets = async (userId: Types.ObjectId): Promise<ImportRow[]> => {
+    try {
+      const fetchedSecrets = await this.secret.find({ userId });
+      const decryptedList = fetchedSecrets.map((s) => {
+        const decrypted = s.decryptAll();
+        return {
+          data: decrypted.data ?? '',
+          label: decrypted.label ?? '',
+          notes: decrypted.notes ?? ''
+        };
+      });
+
+      // Sort alphabetically
+      return decryptedList.sort((a, b) => {
+        return a.label.toLowerCase().localeCompare(b.label.toLowerCase());
+      });
     } catch (err) {
       return this.handleError(err);
     }
