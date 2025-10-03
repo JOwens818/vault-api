@@ -42,7 +42,7 @@ secretSchema.pre('save', function (next) {
     this.label = encryptPlainText(this.label);
   }
   if (this.isModified('notes')) {
-    this.notes = encryptPlainText(this.notes!);
+    this.notes = encryptPlainText(this.notes || '');
   }
   next();
 });
