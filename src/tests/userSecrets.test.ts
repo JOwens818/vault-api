@@ -29,9 +29,10 @@ describe('User + Secret Integration', () => {
 
   it('should fetch secrets only for the authenticated user', async () => {
     const userId = new Types.ObjectId().toString();
-    await setMockUser(userId, 'user');
+    const userId2 = new Types.ObjectId().toString();
 
     // create secret for user
+    await setMockUser(userId, 'user');
     const createResp = await request(app).post('/api/secrets').set('Authorization', 'Bearer fakeToken').send({
       data: 'abc',
       label: 'Email',
@@ -39,10 +40,21 @@ describe('User + Secret Integration', () => {
     });
     expect(createResp.status).toBe(201);
 
-    // retrieve secret labels
+    // create sercret for a second user
+    await setMockUser(userId2, 'user2');
+    const createResp2 = await request(app).post('/api/secrets').set('Authorization', 'Bearer fakeToken').send({
+      data: 'zxy',
+      label: 'Bank',
+      notes: 'some more notes'
+    });
+    expect(createResp2.status).toBe(201);
+
+    // retrieve secret labels for user 1; confirm only retrieves user 1's secrets
+    await setMockUser(userId, 'user');
     const res = await request(app).get('/api/secrets').set('Authorization', 'Bearer fakeToken');
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body).toHaveLength(1);
     expect(res.body[0].label).toBe('Email');
   });
 });

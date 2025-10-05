@@ -7,6 +7,8 @@ import { ImportRow } from '@/resources/secret/secret.service';
 import XLSX from 'xlsx';
 import fs from 'fs';
 import multer from 'multer';
+import path from 'path';
+import HttpException from '@/utils/exceptions/http.exception';
 const upload = multer({ dest: 'uploads/' });
 
 class SecretController implements Controller {
@@ -87,10 +89,31 @@ class SecretController implements Controller {
   private importSecrets = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const userId = this.convertStringToObjectId(req.user.id);
-      if (!req.file) {
-        res.status(400).json({ status: 'error', message: 'Import file not found' });
+      const file = req.file as Express.Multer.File | undefined;
+      if (!file) {
+        return next(new HttpException(400, 'Import file not found'));
       }
 
+      // import file validations
+      const allowedExtensions = ['.xlsx', '.csv'];
+      const ext = path.extname(file.originalname).toLowerCase();
+      if (!allowedExtensions.includes(ext)) {
+        return next(new HttpException(415, `Unsupported file type: ${ext}`));
+      }
+
+      const validMimes = [
+        'text/csv',
+        'application/csv',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/octet-stream', // added for tests & some clients
+        'application/zip' // XLSX may appear as ZIP container
+      ];
+      if (!validMimes.includes(file.mimetype)) {
+        return next(new HttpException(415, `Unsupported MIME type: ${file.mimetype}`));
+      }
+
+      // process imported file
       const wb = XLSX.readFile(req.file!.path);
       const sheetName = wb.SheetNames[0];
       const sheet = wb.Sheets[sheetName];
