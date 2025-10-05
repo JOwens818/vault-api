@@ -55,6 +55,7 @@ class App {
 
   public listen(): void {
     this.express.listen(this.port, () => {
+      console.log('Vault-API: Version 1.0');
       console.log(`App listening on port ${this.port}`);
     });
   }
