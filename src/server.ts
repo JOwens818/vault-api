@@ -6,10 +6,13 @@ import helmet from 'helmet';
 import compression from 'compression';
 import Controller from '@/utils/interfaces/controller.interface';
 import ErrorMiddleware from '@/middleware/error.middleware';
+import { setMongoStatus } from '@/utils/dbStatus';
 
 class App {
   public express: Application;
   public port: number;
+  private reconnectDelay = 60000;
+  private mongoUri = '';
 
   constructor(controllers: Controller[], port: number) {
     this.express = express();
@@ -43,14 +46,46 @@ class App {
   private async initializeDatabaseConnection(): Promise<void> {
     const { MONGODB_USERNAME, MONGODB_PASSWORD, MONGODB_DATABASE, MONGODB_HOST, MONGODB_PORT } = process.env;
     const path = `${MONGODB_USERNAME}:${MONGODB_PASSWORD}@${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DATABASE}`;
+    this.mongoUri = `mongodb://${path}?authSource=admin`;
+    this.registerMongooseEvents();
+    await this.connectWithRetry();
+  }
+
+  private async connectWithRetry(): Promise<void> {
     try {
-      await mongoose.connect(`mongodb://${path}?authSource=admin`);
-      console.log(`Connected to mongodb at ${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DATABASE}`);
+      await mongoose.connect(this.mongoUri);
     } catch (error) {
       if (error instanceof Error) {
         console.log(`Error connecting to mongodb: ${error.message}`);
       }
+      setTimeout(() => this.connectWithRetry(), this.reconnectDelay);
     }
+  }
+
+  private registerMongooseEvents(): void {
+    const conn = mongoose.connection;
+    const { MONGODB_DATABASE, MONGODB_HOST, MONGODB_PORT } = process.env;
+
+    conn.on('connected', () => {
+      setMongoStatus('connected');
+      console.log(`Connected to mongodb at ${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DATABASE}`);
+    });
+
+    conn.on('disconnected', () => {
+      setMongoStatus('disconnected');
+      console.warn('MongoDB disconnected');
+      setTimeout(() => this.connectWithRetry(), this.reconnectDelay);
+    });
+
+    conn.on('reconnected', () => {
+      setMongoStatus('reconnected');
+      console.log(`MongoDB reconnected at ${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DATABASE}`);
+    });
+
+    conn.on('error', (err) => {
+      setMongoStatus('error');
+      console.error('MongoDB connection error:', err);
+    });
   }
 
   public listen(): void {
