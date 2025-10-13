@@ -9,6 +9,7 @@ RUN npm ci
 
 # Copy source code and build
 COPY . .
+RUN npm run test
 RUN npm run build
 RUN npm prune --production
 
