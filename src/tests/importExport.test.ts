@@ -3,10 +3,9 @@ import path from 'path';
 import request from 'supertest';
 import XLSX from 'xlsx';
 import { Types } from 'mongoose';
-import { createTestApp } from './utils/createTestApp';
+import { app } from './setup';
 import { setMockUser } from './utils/mockUser';
 
-const app = createTestApp();
 const testDir = path.join(__dirname, 'test-data');
 
 describe('Secrets Import/Export Integration Suite', () => {
@@ -54,13 +53,13 @@ describe('Secrets Import/Export Integration Suite', () => {
     }
 
     // Step 2: Import
-    const importRes = await request(app).post('/api/secrets/import').set('Authorization', 'Bearer fake-token').attach('file', importFile);
+    const importRes = await request(app.express).post('/api/secrets/import').set('Authorization', 'Bearer fake-token').attach('file', importFile);
 
     expect(importRes.status).toBe(200);
     expect(importRes.body.message).toBe('3 secrets have been created');
 
     // Step 3: Export
-    const exportRes = await request(app)
+    const exportRes = await request(app.express)
       .get(`/api/secrets/export?format=${exportFormat}`)
       .set('Authorization', 'Bearer fake-token')
       .buffer()
@@ -130,7 +129,7 @@ describe('Secrets Import/Export Integration Suite', () => {
     const fileA = path.join(testDir, 'userA-import.csv');
     fs.writeFileSync(fileA, 'label,data,notes\nVaultKey,topSecret,onlyA');
 
-    const importA = await request(app).post('/api/secrets/import').set('Authorization', 'Bearer token-A').attach('file', fileA);
+    const importA = await request(app.express).post('/api/secrets/import').set('Authorization', 'Bearer token-A').attach('file', fileA);
 
     expect(importA.status).toBe(200);
 
@@ -138,7 +137,7 @@ describe('Secrets Import/Export Integration Suite', () => {
     const userBId = new Types.ObjectId().toString();
     await setMockUser(userBId, 'userB');
 
-    const exportB = await request(app).get('/api/secrets/export?format=csv').set('Authorization', 'Bearer token-B');
+    const exportB = await request(app.express).get('/api/secrets/export?format=csv').set('Authorization', 'Bearer token-B');
 
     expect(exportB.status).toBe(200);
     const linesB = exportB.text.trim().split('\n');
@@ -146,7 +145,7 @@ describe('Secrets Import/Export Integration Suite', () => {
 
     // Sanity: User A exports successfully
     await setMockUser(userAId, 'userA');
-    const exportA = await request(app).get('/api/secrets/export?format=csv').set('Authorization', 'Bearer token-A');
+    const exportA = await request(app.express).get('/api/secrets/export?format=csv').set('Authorization', 'Bearer token-A');
 
     const rowsA = exportA.text.trim().split('\n');
     expect(rowsA.length).toBeGreaterThan(1);
@@ -177,12 +176,12 @@ describe('Secrets Import/Export Integration Suite', () => {
       XLSX.writeFile(wb, file);
     }
 
-    const res = await request(app).post('/api/secrets/import').set('Authorization', 'Bearer fake-token').attach('file', file);
+    const res = await request(app.express).post('/api/secrets/import').set('Authorization', 'Bearer fake-token').attach('file', file);
 
     expect(res.status).toBe(400);
     expect(res.body.message).toBe('No secrets found in import file');
 
-    const exportRes = await request(app).get('/api/secrets/export?format=csv').set('Authorization', 'Bearer fake-token');
+    const exportRes = await request(app.express).get('/api/secrets/export?format=csv').set('Authorization', 'Bearer fake-token');
 
     const lines = exportRes.text.trim().split('\n');
     expect(lines.length).toBe(1);
@@ -198,12 +197,12 @@ describe('Secrets Import/Export Integration Suite', () => {
     const file = path.join(testDir, `unsupported.${ext}`);
     fs.writeFileSync(file, 'This is an invalid file type.');
 
-    const res = await request(app).post('/api/secrets/import').set('Authorization', 'Bearer fake-token').attach('file', file);
+    const res = await request(app.express).post('/api/secrets/import').set('Authorization', 'Bearer fake-token').attach('file', file);
 
     expect([400, 415]).toContain(res.status);
     expect(res.body.message || '').toMatch(/unsupported|invalid|type/i);
 
-    const exportRes = await request(app).get('/api/secrets/export?format=csv').set('Authorization', 'Bearer fake-token');
+    const exportRes = await request(app.express).get('/api/secrets/export?format=csv').set('Authorization', 'Bearer fake-token');
 
     const lines = exportRes.text.trim().split('\n');
     expect(lines.length).toBe(1);
