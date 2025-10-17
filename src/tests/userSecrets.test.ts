@@ -1,15 +1,13 @@
 import request from 'supertest';
-import { createTestApp } from './utils/createTestApp';
 import { setMockUser } from './utils/mockUser';
 import { Types } from 'mongoose';
-
-const app = createTestApp();
+import { app } from './setup';
 
 describe('User + Secret Integration', () => {
   it('should create a secret for a valid user', async () => {
     const userId = new Types.ObjectId().toString();
     await setMockUser(userId, 'user');
-    const res = await request(app).post('/api/secrets').set('Authorization', 'Bearer fakeToken').send({
+    const res = await request(app.express).post('/api/secrets').set('Authorization', 'Bearer fakeToken').send({
       data: 'secret',
       label: 'myBank',
       notes: 'some notes here'
@@ -19,7 +17,7 @@ describe('User + Secret Integration', () => {
   });
 
   it('shouuld not allow secrets without auth token', async () => {
-    const res = await request(app).post('/api/secrets').send({
+    const res = await request(app.express).post('/api/secrets').send({
       data: 'nope',
       label: 'sorry'
     });
@@ -33,7 +31,7 @@ describe('User + Secret Integration', () => {
 
     // create secret for user
     await setMockUser(userId, 'user');
-    const createResp = await request(app).post('/api/secrets').set('Authorization', 'Bearer fakeToken').send({
+    const createResp = await request(app.express).post('/api/secrets').set('Authorization', 'Bearer fakeToken').send({
       data: 'abc',
       label: 'Email',
       notes: 'my notes'
@@ -42,7 +40,7 @@ describe('User + Secret Integration', () => {
 
     // create sercret for a second user
     await setMockUser(userId2, 'user2');
-    const createResp2 = await request(app).post('/api/secrets').set('Authorization', 'Bearer fakeToken').send({
+    const createResp2 = await request(app.express).post('/api/secrets').set('Authorization', 'Bearer fakeToken').send({
       data: 'zxy',
       label: 'Bank',
       notes: 'some more notes'
@@ -51,7 +49,7 @@ describe('User + Secret Integration', () => {
 
     // retrieve secret labels for user 1; confirm only retrieves user 1's secrets
     await setMockUser(userId, 'user');
-    const res = await request(app).get('/api/secrets').set('Authorization', 'Bearer fakeToken');
+    const res = await request(app.express).get('/api/secrets').set('Authorization', 'Bearer fakeToken');
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
     expect(res.body).toHaveLength(1);

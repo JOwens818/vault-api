@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import Controller from '@/utils/interfaces/controller.interface';
 import { getMongoStatus } from '@/utils/dbStatus';
+import { getAppVersion } from '@/utils/appVersion';
 
 class StatusController implements Controller {
   public path = '/status';
@@ -17,7 +18,7 @@ class StatusController implements Controller {
   private getStatus = async (_req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const response = {
-        version: '1.0',
+        version: getAppVersion(),
         dbConnection: getMongoStatus()
       };
       res.status(200).json(response);

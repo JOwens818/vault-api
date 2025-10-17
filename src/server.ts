@@ -7,12 +7,17 @@ import compression from 'compression';
 import Controller from '@/utils/interfaces/controller.interface';
 import ErrorMiddleware from '@/middleware/error.middleware';
 import { setMongoStatus } from '@/utils/dbStatus';
+import { Server } from 'http';
+import { getAppVersion } from '@/utils/appVersion';
 
 class App {
   public express: Application;
   public port: number;
   private reconnectDelay = 60000;
+  private reconnectTimer?: NodeJS.Timeout;
   private mongoUri = '';
+  private server?: Server;
+  private closing = false;
 
   constructor(controllers: Controller[], port: number) {
     this.express = express();
@@ -44,6 +49,7 @@ class App {
   }
 
   private async initializeDatabaseConnection(): Promise<void> {
+    if (process.env.NODE_ENV === 'test') return;
     const { MONGODB_USERNAME, MONGODB_PASSWORD, MONGODB_DATABASE, MONGODB_HOST, MONGODB_PORT } = process.env;
     const path = `${MONGODB_USERNAME}:${MONGODB_PASSWORD}@${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DATABASE}`;
     this.mongoUri = `mongodb://${path}?authSource=admin`;
@@ -52,13 +58,15 @@ class App {
   }
 
   private async connectWithRetry(): Promise<void> {
+    if (this.closing || process.env.NODE_ENV === 'test') return;
     try {
       await mongoose.connect(this.mongoUri);
     } catch (error) {
       if (error instanceof Error) {
-        console.log(`Error connecting to mongodb: ${error.message}`);
+        console.error(`Error connecting to mongodb: ${error.message}`);
+        console.log(`Retrying in ${this.reconnectDelay / 1000}s...`);
       }
-      setTimeout(() => this.connectWithRetry(), this.reconnectDelay);
+      this.reconnectTimer = setTimeout(() => this.connectWithRetry(), this.reconnectDelay);
     }
   }
 
@@ -74,7 +82,9 @@ class App {
     conn.on('disconnected', () => {
       setMongoStatus('disconnected');
       console.warn('MongoDB disconnected');
-      setTimeout(() => this.connectWithRetry(), this.reconnectDelay);
+      if (!this.closing && process.env.NODE_ENV !== 'test') {
+        this.reconnectTimer = setTimeout(() => this.connectWithRetry(), this.reconnectDelay);
+      }
     });
 
     conn.on('reconnected', () => {
@@ -89,10 +99,37 @@ class App {
   }
 
   public listen(): void {
-    this.express.listen(this.port, () => {
-      console.log('Vault-API: Version 1.0');
+    this.server = this.express.listen(this.port, () => {
+      console.log(`Vault-API: Version ${getAppVersion()}`);
       console.log(`App listening on port ${this.port}`);
     });
+  }
+
+  public async close(): Promise<void> {
+    if (this.closing) return;
+    this.closing = true;
+    console.log('Closing App resources...');
+
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = undefined;
+    }
+
+    if (this.server) {
+      await new Promise<void>((resolve, reject) => {
+        this.server?.close((err) => (err ? reject(err) : resolve()));
+      });
+      console.log('HTTP server closed');
+    }
+
+    // Disconnect MongoDB
+    if (mongoose.connection.readyState !== 0) {
+      console.log('Closing MongoDB connection...');
+      await mongoose.disconnect();
+      console.log('MongoDB disconnected cleanly.');
+    } else {
+      console.log('No active MongoDB connection — skipping disconnect.');
+    }
   }
 }
 

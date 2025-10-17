@@ -1,6 +1,5 @@
 import 'dotenv/config';
 import 'module-alias/register';
-import mongoose from 'mongoose';
 import validateEnv from '@/utils/validateEnv';
 import App from './server';
 import UserController from '@/resources/user/user.controller';
@@ -19,20 +18,16 @@ const gracefulShutdown = async (signal: string) => {
   console.log(`\nReceived ${signal}. Starting graceful shutdown...`);
 
   try {
-    if (mongoose.connection.readyState !== 0) {
-      console.log('Closing MongoDB connection...');
-      await mongoose.disconnect();
-      console.log('MongoDB disconnected cleanly.');
-    } else {
-      console.log('No active MongoDB connection — skipping disconnect.');
-    }
+    await app.close();
   } catch (err) {
-    console.error('Error during MongoDB disconnect:', err);
+    console.error('Error during shutdown:', err);
   } finally {
-    console.log('Shutting down server process...');
+    console.log('Process exiting...');
     process.exit(0);
   }
 };
 
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+if (process.env.NODE_ENV !== 'test') {
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+}
