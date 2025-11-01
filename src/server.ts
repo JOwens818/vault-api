@@ -1,6 +1,6 @@
 import express, { Application } from 'express';
 import mongoose, { Error } from 'mongoose';
-import cors from 'cors';
+import cors, { CorsOptions } from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import compression from 'compression';
@@ -30,12 +30,36 @@ class App {
   }
 
   private initializeMiddleware(): void {
+    const corsOptions = this.buildCorsOptions();
     this.express.use(helmet());
-    this.express.use(cors());
+    this.express.use(cors(corsOptions));
+    this.express.options('*', cors(corsOptions));
     this.express.use(morgan('dev'));
     this.express.use(express.json());
     this.express.use(express.urlencoded({ extended: false }));
     this.express.use(compression());
+  }
+
+  private buildCorsOptions(): CorsOptions {
+    const rawOrigins = process.env.CORS_ORIGINS ?? '';
+    const allowedOrigins = rawOrigins
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean);
+
+    const originValidator: CorsOptions['origin'] = (origin, callback) => {
+      if (!origin || !allowedOrigins.length || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`Origin ${origin} not allowed by CORS.`));
+    };
+
+    return {
+      origin: originValidator,
+      credentials: true
+    };
   }
 
   private initializeControllers(controllers: Controller[]): void {
