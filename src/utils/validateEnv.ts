@@ -11,6 +11,7 @@ const validateEnv = (): void => {
     MONGODB_HOST: str(),
     MONGODB_PORT: str(),
     PORT: port({ default: 3030 }),
+    CORS_ORIGINS: str({ default: '' }),
     JWT_PUBLIC: str(),
     JWT_PRIVATE: str()
   });
